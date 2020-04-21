@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>  
+</head>
+<body class="container mx-auto p-6">
+  <a href="./list" class="absolute left-0 top-0 pt-3 pl-3">
+    ↩️
+  </a>
+
+  <form data-controller="markdown">
+    <input type="text" 
+      class="w-full text-2xl placeholder-divider mb-4 border-divider border-b-2 hover:border-b-6 focus:outline-none bg-surface-primary truncate" 
+      placeholder="👉🏼 Click bait title goes here 👈🏼" 
+      data-markdown-target="title">
+      
+    <div class="flex text-sm mb-6">
+      <div>
+        Character count: 45
+      </div>
+      <div class="pl-4 cursor-help">
+        Reading time: 3 minutes
+      </div>
+    </div>
+
+    <div>
+      <input id="content" name="content" type="hidden">
+      <trix-editor input="content"></trix-editor>
+    </div>
+    
+  </form>
+</body>
+</html>
