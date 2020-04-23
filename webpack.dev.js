@@ -1,3 +1,4 @@
+const path = require('path');
 const HtmlWebPackPlugin = require("html-webpack-plugin")
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
@@ -8,9 +9,13 @@ module.exports = {
     devtool: 'source-map',    
     module: {
         rules: [{
-            test: '/\.js$/',
-            exclude: /node_modules/,
-            loader: 'babel-loader'
+            test: '/\.js/',        
+            exclude: [ /node_modules/ ],
+            loader: 'babel-loader',
+            options: {            
+                presets: [ "@babel/preset-env" ],
+                plugins: [ "@babel/plugin-proposal-class-properties" ]
+            }
         }, {
             test: /\.scss$/,
             use: ['style-loader', 'css-loader', 'sass-loader']
