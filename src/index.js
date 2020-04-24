@@ -1,4 +1,7 @@
   
+require('trix')
+require('./js/trix_custom_toolbar')
+
 import { Application } from "stimulus"
 import { definitionsFromContext } from "stimulus/webpack-helpers"
 
@@ -9,7 +12,10 @@ application.load(definitionsFromContext(context))
 import './styles/base.css'
 import './styles/trix.css'
 
-console.info({application})
-console.info({context})
+import '@fortawesome/fontawesome-free/js/fontawesome'
+import '@fortawesome/fontawesome-free/js/solid'
+import '@fortawesome/fontawesome-free/js/regular'
+import '@fortawesome/fontawesome-free/js/brands'
 
-require('./js/trix')
+// import './styles/application.scss'
+

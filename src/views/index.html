@@ -18,16 +18,41 @@
       
     <div class="flex text-sm mb-6">
       <div>
-        Character count: 45
+        Character count: <span data-markdown-target="count"></span>
       </div>
       <div class="pl-4 cursor-help">
         Reading time: 3 minutes
       </div>
     </div>
 
-    <div>
+    <div class="actual-editor relative">
       <input id="content" name="content" type="hidden">
-      <trix-editor input="content"></trix-editor>
+      <trix-editor data-controller="trix-toolbar" data-markdown-target="editor" input="content" class="editor"></trix-editor>
+    </div>
+    
+    <br>
+    <div class="flex">
+      <button class="btn btn-primary mr-2" type="button" data-action="markdown#publish">
+        Publish draft in
+        <i class="fab fa-dev fa-lg"></i>
+      </button>
+      <button class="btn btn-primary mr-2" type="button" data-action="markdown#downloadHTML">
+        HTML
+        <i class="fas fa-download"></i>
+      </button>
+      <button class="btn btn-primary mr-2" type="button" data-action="markdown#downloadMarkdown">
+        Markdown
+        <i class="fas fa-download"></i>
+      </button>
+  <!--    <select class="" data-action="markdown#download">-->
+  <!--      <option value="" selected="selected">Download</option>-->
+  <!--      <option value="markdown">Markdown</option>-->
+  <!--      <option value="html">HTML</option>-->
+  <!--    </select>-->
+     <input type="submit" class="btn btn-secondary cursor-pointer ml-auto">
+       Finish post <i class="fas fa-flag-checkered"></i>
+     </input>    
+                    
     </div>
     
   </form>

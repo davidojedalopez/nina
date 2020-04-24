@@ -1,3 +1,72 @@
-@tailwind base;
+/* @tailwind base;
 @tailwind components;
-@tailwind utilities;
+@tailwind utilities; */
+
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+:root {
+  --color-text-primary: #212121;
+  --color-text-secondary : #757575;
+
+  --color-divider: #BDBDBD;
+  --color-accent: #4CAF50;
+  --color-accent-warning: #FFC107;
+
+  --color-primary-dark: #303F9F;
+  --color-primary: #3F51B5;
+  --color-primary-light: #C5CAE9;
+
+  --color-surface-primary: #f4f4f4;
+  --color-surface-secondary: #F7FAFC;
+  --color-surface-tertiary: #FFFFFF;
+}
+
+body {
+  @apply bg-surface-primary text-text-primary;  
+}
+
+h1 {
+  @apply text-3xl mb-8;
+}
+h2 {
+  @apply text-xl;
+}
+h3 {
+  @apply text-lg;
+}
+
+ul, ol {
+  @apply ml-6;
+}
+
+ul li {
+  @apply list-disc;
+}
+
+ol li {
+  @apply list-decimal;
+}
+
+pre, code {
+  @apply w-full font-mono text-sm m-0 p-2 whitespace-pre bg-surface-secondary overflow-x-auto;
+}
+
+blockquote {
+  @apply ml-1 pl-2 border-solid border-l-2 border-gray-400;
+}
+
+.editor {
+  background-color: #fff;
+  /* background-image:
+          linear-gradient(90deg, transparent 22px, var(--color-primary-light) 22px, var(--color-primary-light) 24px, transparent 24px),
+          linear-gradient(#eee .05em, transparent .05em);
+  background-size: 100% 30px; */
+  @apply pl-8;
+  @apply pt-4;
+  line-height: 30px;
+  padding-top: 2.2rem;
+  min-height: 20vh;
+  height: 100%;
+}

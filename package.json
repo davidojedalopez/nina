@@ -19,14 +19,27 @@
   "author": "David Ojeda",
   "license": "ISC",
   "dependencies": {
+    "alex": "^8.1.1",
+    "file-saver": "^2.0.2",
+    "notie": "^4.3.1",
+    "postcss-flexbugs-fixes": "^4.2.0",
+    "postcss-import": "^12.0.1",
+    "postcss-preset-env": "^6.7.0",
+    "stimulus": "https://github.com/stimulusjs/dev-builds/archive/b8cc8c4/stimulus.tar.gz",
+    "trix": "^1.2.3",
+    "turndown": "^6.0.0",
+    "vfile": "^4.1.0",
+    "vfile-location": "^3.0.1",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
-    "stimulus": "https://github.com/stimulusjs/dev-builds/archive/b8cc8c4/stimulus.tar.gz"
+    "write-good": "^1.0.2"
   },
   "devDependencies": {
+    "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/preset-env": "^7.9.5",
+    "@fortawesome/fontawesome-free": "^5.13.0",
     "autoprefixer": "^9.7.6",
     "babel-loader": "^8.1.0",
     "clean-webpack-plugin": "^3.0.0",

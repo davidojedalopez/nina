@@ -10,6 +10,7 @@ export default class extends Controller {
   };
 
   connect() {    
+    console.info('connected')
     const toolbar = this.element.previousSibling
     
     const h1ButtonHTML = '<button type="button" class="trix-button" data-trix-attribute="heading" title="Heading">H1</button>'
@@ -33,6 +34,7 @@ export default class extends Controller {
     `;
 
     addEventListener("trix-initialize", function(event) {
+        console.info('initi')
         const headingButton = toolbar.querySelector('[data-trix-attribute="heading1"]')
         if(headingButton) {
             headingButton.remove()

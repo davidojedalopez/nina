@@ -1,0 +1,395 @@
+import { Controller } from "stimulus"
+import TurndownService from "turndown";
+import notie from 'notie/dist/notie';
+import { saveAs } from 'file-saver';
+import alex from 'alex';
+import writeGood from 'write-good';
+import vfile from 'vfile';
+import vfileLocation from 'vfile-location';
+
+const debounce = (func, delay) => {
+  let timerId;
+  return (...args) => {
+    const boundFunc = func.bind(this, ...args);
+    clearTimeout(timerId);
+    timerId = setTimeout(boundFunc, delay);
+  }
+};
+
+export default class extends Controller {
+  static get targets() { 
+    return [ "editor", "title", "count", 'warning' ]
+  }
+
+  static get values() {
+    return {
+      markdown: String,
+      postId: String,
+      characterCount: Number
+    }
+  }
+
+  connect() {
+    this.editor = this.editorTarget.editor;
+
+    this.setupTrixEventListeners();
+    this.initializeTurndown();
+
+    if(localStorage[this.storageKey]) {
+      let article = JSON.parse(localStorage[this.storageKey]);
+      this.editor.loadJSON(article.content);
+      this.titleTarget.value = article.title;
+    }
+
+    this.setCharacterCount();
+
+    window.addEventListener("beforeunload", () => {
+      let leave = 'Content has not been saved, save now and leave?';
+      if(leave) {
+        return undefined;
+      } else {
+        return leave;
+      }
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if(event.metaKey && event.key.toLowerCase() === 's') {
+        let notieAlert = document.querySelector('.notie-textbox');
+        if(notieAlert) {
+          return;
+        }
+
+        event.preventDefault();
+        notie.alert({
+          type: 'info',
+          text: 'Your article is saved automatically 😉 Press CMD + S again to save page.',
+          time: 4
+        });
+      }
+    });
+
+  }
+
+  setCharacterCount() {
+    this.characterCountValue = this.editor.getDocument().toString().trim().length;
+    this.countTarget.innerText = this.characterCountValue;
+  }
+
+  setupTrixEventListeners() {
+    document.addEventListener('trix-change', debounce((e) => {
+      this.checkWriting();
+    }, 500));
+
+    document.addEventListener('trix-change', (event) => {    
+      setTimeout(() => {
+        this.markdownValue = this.turndownService.turndown(event.target);
+        localStorage[this.storageKey] = JSON.stringify({
+          title: this.titleTarget.value,
+          content: this.editor
+        })
+      }, 0);
+      this.setCharacterCount();
+    });
+
+    document.addEventListener('trix-attachment-add', (event) => {  
+      if(event.attachment.file) {
+        this.uploadFileAttachment(event.attachment)
+      }
+    });
+  
+    document.addEventListener('trix-before-paste', (event) => {
+      
+    });
+
+    document.addEventListener('trix-selection-change', (event) => {
+      // console.info(this.editor.getSelectedRange());
+      // var rect = this.editor.getClientRectAtPosition(this.editor.getSelectedRange()[0]);
+      // console.info({rect});
+      // let elm = document.elementFromPoint(rect.x, rect.y);
+      // console.info({elm});
+    });
+  }
+
+  get storageKey() {      
+    return `editor-state-post-${this.postIdValue}`;  
+  }
+
+  initializeTurndown() {
+    this.turndownService = new TurndownService({
+      headingStyle: 'atx'
+    });
+
+    this.turndownService.addRule('figure', {
+      filter: ['figure'],
+      replacement: function (content, node) {
+        return "\n![" + node.querySelector('figcaption:last-of-type').innerText + "](" + node.querySelector('a').href + ")\n"
+      }
+    }).addRule('code', {
+      filter: ['pre'],
+      replacement: function (content) {      
+        return '\`\`\`\n' + content + '\n\`\`\`'      
+      }
+    }).addRule('strikethrough', {
+      filter: ['del'],
+      replacement: function (content) {
+        return '~~' + content + '~~'
+      }
+    })  
+
+  }
+
+  get fileName() {
+    let regExp = new RegExp(' ', 'g');
+    return this
+        .titleTarget
+        .value
+        .toLowerCase()
+        .replace(/[^a-zA-Z 0-9]+/g, '')
+        .replace(regExp, '_');
+  }
+
+  publish(event) {
+    let payload = {
+      article: {
+        title: this.titleTarget.value,
+        published: false,
+        body_markdown: this.markdownValue
+      }
+    };
+    fetch('/article/publish', {
+      method: 'post',
+      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(response => {
+      return response.json();
+    }).then(data => {
+      notie.alert({
+        type: 'success',
+        text: `<a href="${data.url}/edit" target="_blank" rel="noopener">Go to your post!</a>`
+      })
+    }).catch(error => {
+      console.error({error});
+    });
+
+  }
+
+  download(event) {
+    let select = event.target;
+    let option = select.selectedOptions[0].value;
+    if(!option) {
+      return;
+    }
+
+    if(option === 'html') {
+      this.downloadHTML();
+    } else {
+      this.downloadMarkdown()
+    }
+
+    select.selectedIndex = 0;
+  }
+
+  downloadMarkdown() {
+    this.markdownValue = this.turndownService.turndown(this.editorTarget);
+    let blob = new Blob([this.markdownValue], { type: "text/markdown; charset=UTF-8" });
+    saveAs(blob, `${this.fileName}.md`);
+  }
+
+  downloadHTML() {
+    let blob = new Blob([this.editorTarget.value], { type: "text/html; charset=UTF-8" });
+    saveAs(blob, `${this.fileName}.html`);
+  }
+
+  uploadFileAttachment(attachment) {
+    this.uploadFile(attachment.file, setProgress, setAttributes);
+    
+    function setProgress(progress) {
+      attachment.setUploadProgress(progress)
+    }
+    
+    function setAttributes(attributes) {
+      attachment.setAttributes(attributes)
+    }
+  }
+
+  uploadFile(file, progressCallback, successCallback) {
+    let key = this.createStorageKey(file);
+    
+    var url = new URL('/upload/get_signed_url', 'http://localhost:3000')
+    var params = {
+      key: key,
+      content_type: file.type
+    };
+    url.search = new URLSearchParams(params).toString();
+      
+    fetch(url)
+      .then( (response) => {
+        return response.json()
+      }).then( (json) => {
+        return json.url
+      }).then( (url) => {
+        this.signedUpload(file, key, url, progressCallback, successCallback)
+      })    
+  }
+
+  signedUpload(file, key, url, progressCallback, successCallback) {
+    let xhr = new XMLHttpRequest();
+
+    xhr.open("PUT", url, true);
+    xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
+    xhr.setRequestHeader('Content-Type', file.type);
+
+    xhr.upload.addEventListener("progress", function (event) {
+      let progress = event.loaded / event.total * 100;
+      progressCallback(progress)
+    });
+
+    xhr.addEventListener("load", function (event) {
+      let finalUrl = "https://d1f6qu3m1nxo77.cloudfront.net/";
+      if (xhr.status === 200) {
+        let attributes = {
+          url: finalUrl + key,
+          href: finalUrl + key + "?content-disposition=attachment"
+        };
+        successCallback(attributes);
+      }
+    });
+
+    xhr.send(file)
+  }
+  
+  createStorageKey(file) {
+    let date = new Date();
+    let day = date.toISOString().slice(0,10);
+    let name = date.getTime() + "-" + file.name;
+    return [ "tmp", day, name ].join("/")
+  }
+
+  checkWriting() {
+    let documentString = this.editor.getDocument().toString();
+
+    let warnings = alex.text(documentString).messages;
+
+    let alexWarnings = alex.text(documentString).messages.map( (it) => {
+      return {
+        start: it.location.start.offset,
+        line: it.line,
+        message: it.message
+      }
+    });
+
+    let location = vfileLocation(documentString);
+
+    let writeGoodWarnings = writeGood(documentString).map( (it) => {
+      let vfile = location.toPosition(it.index);
+      return {
+        start: it.index,
+        line: vfile.line,
+        message: it.reason
+      }
+    });
+
+    let allWarnings = alexWarnings.concat(writeGoodWarnings);
+
+    let range = this.editor.getSelectedRange();
+
+    let previousWarnings = this.warningTargets;
+    previousWarnings.forEach( (it) => { it.remove() });
+
+    let previousTooltips = document.querySelectorAll('span[data-tooltip="warning-tooltip"]');
+    previousTooltips.forEach( (it) => { it.remove() });
+
+    // for(let warning of warnings) {
+    for(let warning of allWarnings) {
+      // let startOffset = warning.location.start.offset;
+      let startOffset = warning.start;
+
+      let span = document.querySelector(`span[data-line="${warning.line}"]`);
+      // let span = document.querySelector(`span[data-line="${warning.start}"]`);
+      if(span) {
+        span.setAttribute('data-title', `${span.getAttribute('title')}\n ${warning.message}` );
+
+        let tooltip = document.querySelector(`span[data-tooltip="warning-tooltip"][data-line="${warning.line}"]`);
+        // let tooltip = document.querySelector(`span[data-tooltip="warning-tooltip"][data-line="${warning.start}"]`);
+
+        tooltip.innerText = tooltip.innerText + `${warning.message}. `;
+        continue;
+      }
+
+      span = document.createElement('span');
+      span.setAttribute('data-markdown-target', 'warning');
+
+      span.setAttribute('data-line', warning.line);
+      // span.setAttribute('data-line', warning.start);
+
+      let rect = this.editor.getClientRectAtPosition(startOffset);
+      if(!rect) {
+        continue;
+      }
+      span.style.top = `${rect.y - 125}px`;
+      // span.style.left = `${rect.x}px`;
+
+      let icon = document.createElement('i');
+      icon.classList.add('fas', 'fa-exclamation-circle');
+      span.setAttribute('data-title', warning.message);
+      span.classList.add('absolute', 'cursor-pointer', 'text-accent-warning', 'ml-1');
+      span.append(icon);
+      // document.querySelector('section.trix-container').append(span);
+
+      let tooltip = document.createElement('span');
+      tooltip.innerText = `${warning.message}. `;
+      tooltip.style.top = `${rect.y - 160}px`;
+      tooltip.style.left = "-10px";
+      tooltip.classList.add('warning-tooltip');
+      tooltip.setAttribute('data-tooltip', 'warning-tooltip');
+      tooltip.setAttribute('hidden', 'hidden');
+
+      tooltip.setAttribute('data-line', warning.line);
+      // tooltip.setAttribute('data-line', warning.start);
+
+      span.addEventListener('mouseenter', (event) => {
+        let target = event.target;
+        let warningTooltip = document.querySelector(`span[data-tooltip="warning-tooltip"][data-line="${target.getAttribute('data-line')}"]`);
+        warningTooltip.removeAttribute('hidden');
+      });
+
+      span.addEventListener('mouseleave', (event) => {
+        let target = event.target;
+        let warningTooltip = document.querySelector(`span[data-tooltip="warning-tooltip"][data-line="${target.getAttribute('data-line')}"]`);
+        warningTooltip.setAttribute('hidden', 'hidden');
+      });
+
+      document.querySelector('div.actual-editor').append(span);
+      document.querySelector('div.actual-editor').append(tooltip);
+      // span.append(tooltip);
+    }
+  }
+}
+
+
+// function doStuff(event) {
+//   return () => {
+//     console.info('debounced')
+
+//     let markdown = turndownService.turndown(event.target.value)    
+
+//     let warnings = alex.markdown(markdown).messages
+
+//     alexWarnings.innerHTML = ''
+
+//     for(let warning of warnings) {
+//       let start = warning.location.start.offset
+//       let end = warning.location.end.offset
+
+//       trixEditor.setSelectedRange([start, end])
+//       trixEditor.insertHTML("<highlight>"+ warning.actual +"</highlight>")
+
+//       console.info(trixEditor.getClientRectAtPosition(start))
+
+//       alexWarnings.insertAdjacentHTML('beforeend', `<p>${warning}</p>`)
+    
+//     }  
+//   }  
+// }
