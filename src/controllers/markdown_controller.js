@@ -324,12 +324,12 @@ export default class extends Controller {
       span.setAttribute('data-line', warning.line);
       // span.setAttribute('data-line', warning.start);
 
-      let rect = this.editor.getClientRectAtPosition(startOffset);
+      let rect = this.editor.getClientRectAtPosition(startOffset);      
       if(!rect) {
         continue;
       }
-      span.style.top = `${rect.y - 125}px`;
-      // span.style.left = `${rect.x}px`;
+      // span.style.top = `${rect.y - 125}px`;
+      span.style.top = `${rect.top + window.pageYOffset - 127}px`;
 
       let icon = document.createElement('i');
       icon.classList.add('fas', 'fa-exclamation-circle');
@@ -340,9 +340,11 @@ export default class extends Controller {
 
       let tooltip = document.createElement('span');
       tooltip.innerText = `${warning.message}. `;
-      tooltip.style.top = `${rect.y - 160}px`;
-      tooltip.style.left = "-10px";
-      tooltip.classList.add('warning-tooltip');
+      // tooltip.style.top = `${rect.y - 160}px`;      
+      tooltip.style.top = `${rect.y + window.pageYOffset - 127 - rect.height}px`;
+      // tooltip.style.left = "-10px";
+      tooltip.style.left = "20px";
+      tooltip.classList.add('warning-tooltip', 'absolute');
       tooltip.setAttribute('data-tooltip', 'warning-tooltip');
       tooltip.setAttribute('hidden', 'hidden');
 
@@ -367,29 +369,3 @@ export default class extends Controller {
     }
   }
 }
-
-
-// function doStuff(event) {
-//   return () => {
-//     console.info('debounced')
-
-//     let markdown = turndownService.turndown(event.target.value)    
-
-//     let warnings = alex.markdown(markdown).messages
-
-//     alexWarnings.innerHTML = ''
-
-//     for(let warning of warnings) {
-//       let start = warning.location.start.offset
-//       let end = warning.location.end.offset
-
-//       trixEditor.setSelectedRange([start, end])
-//       trixEditor.insertHTML("<highlight>"+ warning.actual +"</highlight>")
-
-//       console.info(trixEditor.getClientRectAtPosition(start))
-
-//       alexWarnings.insertAdjacentHTML('beforeend', `<p>${warning}</p>`)
-    
-//     }  
-//   }  
-// }
