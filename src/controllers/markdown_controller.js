@@ -1,8 +1,7 @@
 import { Controller } from "stimulus"
-import notie from 'notie/dist/notie';
 import { saveAs } from 'file-saver';
 
-import { debounce } from '../js/common'
+import { debounce, notifyInfo, notifySuccess } from '../js/common'
 import { htmlToMarkdown } from '../js/markdown_converter'
 import { generateWarnings } from '../js/grammar_checker'
 
@@ -49,12 +48,9 @@ export default class extends Controller {
           return;
         }
 
-        event.preventDefault();
-        notie.alert({
-          type: 'info',
-          text: 'Your article is saved automatically 😉 Press CMD + S again to save page.',
-          time: 4
-        });
+        event.preventDefault();      
+        notifyInfo('Your article is saved automatically 😉 Press CMD + S again to save page.')        
+
       }
     });
 
@@ -131,10 +127,7 @@ export default class extends Controller {
     }).then(response => {
       return response.json();
     }).then(data => {
-      notie.alert({
-        type: 'success',
-        text: `<a href="${data.url}/edit" target="_blank" rel="noopener">Go to your post!</a>`
-      })
+      notifySuccess(`<a href="${data.url}/edit" target="_blank" rel="noopener">Go to your post!</a>`)      
     }).catch(error => {
       console.error({error});
     });
