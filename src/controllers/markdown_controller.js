@@ -1,5 +1,4 @@
 import { Controller } from "stimulus"
-import TurndownService from "turndown";
 import notie from 'notie/dist/notie';
 import { saveAs } from 'file-saver';
 import alex from 'alex';
@@ -7,14 +6,8 @@ import writeGood from 'write-good';
 import vfile from 'vfile';
 import vfileLocation from 'vfile-location';
 
-const debounce = (func, delay) => {
-  let timerId;
-  return (...args) => {
-    const boundFunc = func.bind(this, ...args);
-    clearTimeout(timerId);
-    timerId = setTimeout(boundFunc, delay);
-  }
-};
+import { debounce } from '../js/common'
+import { htmlToMarkdown } from '../js/markdownConverter'
 
 export default class extends Controller {
   static get targets() { 
@@ -33,7 +26,8 @@ export default class extends Controller {
     this.editor = this.editorTarget.editor;
 
     this.setupTrixEventListeners();
-    this.initializeTurndown();
+
+    this.turndownService = htmlToMarkdown
 
     if(localStorage[this.storageKey]) {
       let article = JSON.parse(localStorage[this.storageKey]);
@@ -112,30 +106,6 @@ export default class extends Controller {
 
   get storageKey() {      
     return `editor-state-post-${this.postIdValue}`;  
-  }
-
-  initializeTurndown() {
-    this.turndownService = new TurndownService({
-      headingStyle: 'atx'
-    });
-
-    this.turndownService.addRule('figure', {
-      filter: ['figure'],
-      replacement: function (content, node) {
-        return "\n![" + node.querySelector('figcaption:last-of-type').innerText + "](" + node.querySelector('a').href + ")\n"
-      }
-    }).addRule('code', {
-      filter: ['pre'],
-      replacement: function (content) {      
-        return '\`\`\`\n' + content + '\n\`\`\`'      
-      }
-    }).addRule('strikethrough', {
-      filter: ['del'],
-      replacement: function (content) {
-        return '~~' + content + '~~'
-      }
-    })  
-
   }
 
   get fileName() {
