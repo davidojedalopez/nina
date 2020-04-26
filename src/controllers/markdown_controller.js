@@ -25,8 +25,6 @@ export default class extends Controller {
 
     this.setupTrixEventListeners();
 
-    this.turndownService = htmlToMarkdown
-
     if(localStorage[this.storageKey]) {
       let article = JSON.parse(localStorage[this.storageKey]);
       this.editor.loadJSON(article.content);
@@ -74,7 +72,7 @@ export default class extends Controller {
 
     document.addEventListener('trix-change', (event) => {    
       setTimeout(() => {
-        this.markdownValue = this.turndownService.turndown(event.target);
+        this.markdownValue = htmlToMarkdown.turndown(event.target);
         localStorage[this.storageKey] = JSON.stringify({
           title: this.titleTarget.value,
           content: this.editor
@@ -160,7 +158,7 @@ export default class extends Controller {
   }
 
   downloadMarkdown() {
-    this.markdownValue = this.turndownService.turndown(this.editorTarget);
+    this.markdownValue = htmlToMarkdown.turndown(this.editorTarget);
     let blob = new Blob([this.markdownValue], { type: "text/markdown; charset=UTF-8" });
     saveAs(blob, `${this.fileName}.md`);
   }
