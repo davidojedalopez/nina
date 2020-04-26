@@ -1,13 +1,11 @@
 import { Controller } from "stimulus"
 import notie from 'notie/dist/notie';
 import { saveAs } from 'file-saver';
-import alex from 'alex';
-import writeGood from 'write-good';
-import vfile from 'vfile';
-import vfileLocation from 'vfile-location';
 
 import { debounce } from '../js/common'
-import { htmlToMarkdown } from '../js/markdownConverter'
+import { htmlToMarkdown } from '../js/markdown_converter'
+import { generateWarnings } from '../js/grammar_checker'
+
 
 export default class extends Controller {
   static get targets() { 
@@ -240,29 +238,7 @@ export default class extends Controller {
   checkWriting() {
     let documentString = this.editor.getDocument().toString();
 
-    let warnings = alex.text(documentString).messages;
-
-    let alexWarnings = alex.text(documentString).messages.map( (it) => {
-      return {
-        start: it.location.start.offset,
-        line: it.line,
-        message: it.message
-      }
-    });
-
-    let location = vfileLocation(documentString);
-
-    let writeGoodWarnings = writeGood(documentString).map( (it) => {
-      let vfile = location.toPosition(it.index);
-      return {
-        start: it.index,
-        line: vfile.line,
-        message: it.reason
-      }
-    });
-
-    let allWarnings = alexWarnings.concat(writeGoodWarnings);
-
+    let allWarnings = generateWarnings(documentString)
     let range = this.editor.getSelectedRange();
 
     let previousWarnings = this.warningTargets;
