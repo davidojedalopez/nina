@@ -5,6 +5,7 @@ import { debounce, notifyInfo, notifySuccess } from '../js/common'
 import { htmlToMarkdown } from '../js/markdown_converter'
 import { generateWarnings } from '../js/grammar_checker'
 
+import { uploadFileAttachment } from '../js/file_uploader'
 
 export default class extends Controller {
   static get targets() { 
@@ -50,7 +51,6 @@ export default class extends Controller {
 
         event.preventDefault();      
         notifyInfo('Your article is saved automatically 😉 Press CMD + S again to save page.')        
-
       }
     });
 
@@ -64,7 +64,7 @@ export default class extends Controller {
   setupTrixEventListeners() {
     document.addEventListener('trix-change', debounce((e) => {
       this.checkWriting();
-    }, 500));
+    }, 1000));
 
     document.addEventListener('trix-change', (event) => {    
       setTimeout(() => {
@@ -81,18 +81,6 @@ export default class extends Controller {
       if(event.attachment.file) {
         this.uploadFileAttachment(event.attachment)
       }
-    });
-  
-    document.addEventListener('trix-before-paste', (event) => {
-      
-    });
-
-    document.addEventListener('trix-selection-change', (event) => {
-      // console.info(this.editor.getSelectedRange());
-      // var rect = this.editor.getClientRectAtPosition(this.editor.getSelectedRange()[0]);
-      // console.info({rect});
-      // let elm = document.elementFromPoint(rect.x, rect.y);
-      // console.info({elm});
     });
   }
 
