@@ -1,0 +1,41 @@
+{
+    "paths": [
+        {
+            "name": "/publish",
+            "lambdaFunction": "nina",
+            "privacy": {
+                "private": true,
+                "auth": [
+                    "/POST",
+                    "/GET",
+                    "/PUT",
+                    "/PATCH",
+                    "/DELETE"
+                ]
+            }
+        }
+    ],
+    "resourceName": "nina",
+    "apiName": "nina",
+    "functionArns": [
+        {
+            "lambdaFunction": "nina"
+        }
+    ],
+    "privacy": {
+        "auth": 1,
+        "unauth": 0,
+        "authRoleName": "amplify-nina-prod-184625-authRole",
+        "unAuthRoleName": "amplify-nina-prod-184625-unauthRole"
+    },
+    "dependsOn": [
+        {
+            "category": "function",
+            "resourceName": "nina",
+            "attributes": [
+                "Name",
+                "Arn"
+            ]
+        }
+    ]
+}

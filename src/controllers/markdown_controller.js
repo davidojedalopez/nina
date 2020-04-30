@@ -6,6 +6,7 @@ import { htmlToMarkdown } from '../js/markdown_converter'
 import { generateWarnings } from '../js/grammar_checker'
 
 import { uploadFileAttachment } from '../js/file_uploader'
+import { publish } from '../js/publish'
 
 export default class extends Controller {
   static get targets() { 
@@ -79,7 +80,8 @@ export default class extends Controller {
 
     document.addEventListener('trix-attachment-add', (event) => {  
       if(event.attachment.file) {
-        this.uploadFileAttachment(event.attachment)
+        console.info('uploading')
+        uploadFileAttachment(event.attachment)        
       }
     });
   }
@@ -98,28 +100,8 @@ export default class extends Controller {
         .replace(regExp, '_');
   }
 
-  publish(event) {
-    let payload = {
-      article: {
-        title: this.titleTarget.value,
-        published: false,
-        body_markdown: this.markdownValue
-      }
-    };
-    fetch('/article/publish', {
-      method: 'post',
-      body: JSON.stringify(payload),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }).then(response => {
-      return response.json();
-    }).then(data => {
-      notifySuccess(`<a href="${data.url}/edit" target="_blank" rel="noopener">Go to your post!</a>`)      
-    }).catch(error => {
-      console.error({error});
-    });
-
+  publish() {
+    publish(this.titleTarget.value, this.markdownValue)
   }
 
   download(event) {
@@ -147,71 +129,6 @@ export default class extends Controller {
   downloadHTML() {
     let blob = new Blob([this.editorTarget.value], { type: "text/html; charset=UTF-8" });
     saveAs(blob, `${this.fileName}.html`);
-  }
-
-  uploadFileAttachment(attachment) {
-    this.uploadFile(attachment.file, setProgress, setAttributes);
-    
-    function setProgress(progress) {
-      attachment.setUploadProgress(progress)
-    }
-    
-    function setAttributes(attributes) {
-      attachment.setAttributes(attributes)
-    }
-  }
-
-  uploadFile(file, progressCallback, successCallback) {
-    let key = this.createStorageKey(file);
-    
-    var url = new URL('/upload/get_signed_url', 'http://localhost:3000')
-    var params = {
-      key: key,
-      content_type: file.type
-    };
-    url.search = new URLSearchParams(params).toString();
-      
-    fetch(url)
-      .then( (response) => {
-        return response.json()
-      }).then( (json) => {
-        return json.url
-      }).then( (url) => {
-        this.signedUpload(file, key, url, progressCallback, successCallback)
-      })    
-  }
-
-  signedUpload(file, key, url, progressCallback, successCallback) {
-    let xhr = new XMLHttpRequest();
-
-    xhr.open("PUT", url, true);
-    xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
-    xhr.setRequestHeader('Content-Type', file.type);
-
-    xhr.upload.addEventListener("progress", function (event) {
-      let progress = event.loaded / event.total * 100;
-      progressCallback(progress)
-    });
-
-    xhr.addEventListener("load", function (event) {
-      let finalUrl = "https://d1f6qu3m1nxo77.cloudfront.net/";
-      if (xhr.status === 200) {
-        let attributes = {
-          url: finalUrl + key,
-          href: finalUrl + key + "?content-disposition=attachment"
-        };
-        successCallback(attributes);
-      }
-    });
-
-    xhr.send(file)
-  }
-  
-  createStorageKey(file) {
-    let date = new Date();
-    let day = date.toISOString().slice(0,10);
-    let name = date.getTime() + "-" + file.name;
-    return [ "tmp", day, name ].join("/")
   }
 
   checkWriting() {

@@ -1,0 +1,12 @@
+{
+    "permissions": {
+        "auth": {
+            "ninad3613b06": [
+                "create",
+                "read",
+                "update",
+                "delete"
+            ]
+        }
+    }
+}

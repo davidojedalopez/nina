@@ -9,6 +9,10 @@ const application = Application.start()
 const context = require.context("./controllers", true, /\.js$/)
 application.load(definitionsFromContext(context))
 
+import Amplify, { Storage } from 'aws-amplify'
+import awsconfig from './aws-exports'
+Amplify.configure(awsconfig)
+
 import './styles/base.css'
 import './styles/trix.css'
 
