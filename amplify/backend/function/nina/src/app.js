@@ -48,10 +48,35 @@ app.get('/publish/*', function(req, res) {
 * Example post method *
 ****************************/
 
-app.post('/publish', function(req, res) {
-  // Add your code here
-  res.json({success: 'post call succeed!', url: req.url, body: req.body})
-});
+app.post('/publish', publish);
+
+async function publish(req, res) {
+  console.info('publishing')
+  let payload = {
+    article: {
+      title: req.body.title,
+      body_markdown: req.body.markdown,
+      published: false
+    }
+  }
+  try {
+    let res = await fetch(PUBLISH_URL, {
+      method: 'post',
+      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': 'KczcB6vk8cZHyi7dGUVLHJcC'
+      }
+    })
+    let data = await res.json()
+    res.json(data)
+    // notifySuccess(`<a href="${data.url}/edit" target="_blank" rel="noopener">Go to your post!</a>`)
+  } catch(err) {
+    console.error(err)
+    res.json({error: true})
+  }
+
+}
 
 app.post('/publish/*', function(req, res) {
   // Add your code here

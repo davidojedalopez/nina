@@ -8,6 +8,8 @@ import { generateWarnings } from '../js/grammar_checker'
 import { uploadFileAttachment } from '../js/file_uploader'
 import { publish } from '../js/publish'
 
+import { API, Auth } from 'aws-amplify'
+
 export default class extends Controller {
   static get targets() { 
     return [ "editor", "title", "count", 'warning' ]
@@ -100,8 +102,31 @@ export default class extends Controller {
         .replace(regExp, '_');
   }
 
-  publish() {
-    publish(this.titleTarget.value, this.markdownValue)
+  async publish() {   
+    
+    // const user = await Auth.signUp({
+    //   username: 'david.ojeda.lopez@gmail.com',
+    //   password: 'a-really-complex-password'      
+    // });
+    // console.info({user})
+    
+    
+    // await Auth.confirmSignUp('david.ojeda.lopez@gmail.com', '876563');
+
+    const user = await Auth.signIn('david.ojeda.lopez@gmail.com', 'a-really-complex-password');
+
+    let myInit =  {
+      headers: {
+        Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+      },
+      body: {
+        title: 'from amplify', 
+        markdown: "# A big title"
+      } 
+    }
+    let res = await API.post('nina', '/publish', myInit)
+    console.info({res})
+    // publish(this.titleTarget.value, this.markdownValue)
   }
 
   download(event) {
